@@ -29,6 +29,7 @@ Author URI:  http://www.brandonpetersen.com/
 
 // The filter will adjust the WHERE clause in obtaiing Posts
 add_filter('posts_where', 'privatePlus_where');
+add_filter('user_has_cap', 'privatePlus_add_read_ability', 10, 3);
 add_action('admin_menu','privatePlus_menu');
 register_activation_hook(__FILE__,"privatePlus_activate");
 register_deactivation_hook(__FILE__,"privatePlus_deactivate");
@@ -40,7 +41,6 @@ register_deactivation_hook(__FILE__,"privatePlus_deactivate");
 function privatePlus_activate() 
 {
 	add_option("privacyPlus_user_level", "7", "", "yes");
-
 }
 
 /**
@@ -54,24 +54,65 @@ function privatePlus_deactivate()
 }
 
 /**
- * privatePlus_where() - Function that does the work in adjusting the WHERE clause
+ * privatePlus_add_read_ability() - Function that gives users the ability to read a private post
  * 
- * This function will determine if the user's level is high enough to view a private clause.
+ * This function will give a user the ability to read a private post, if their user's level is high 
+ * enough to view a private posts.
+ * 
+ * @param    array    $allcaps    Defines the capabilities of a user
+ * @param    array    $caps       Defines the capabilities that is being test
+ * @param    array    $args       Defines details about the current post 
+ *                                With $args[0] = capability being requested
+ *                                With $args[1] = user_ID of the current user
+ *                                With $args[2] = post_ID of the post/page record that is being requested
+ * @return   array                The adjusted $allcaps array that defines new capabilities of the user
+ */
+function privatePlus_add_read_ability($allcaps, $caps, $args)
+{
+	// The user_has_caps filter can be called multiple times.  We are only concerned
+	// about the call that pertains to reading a private post.  All other calls are ignored. 
+	if ( (in_array('read_private_posts', $caps) OR in_array('read_private_pages', $caps)) AND is_user_logged_in())
+	{
+		// Obtain the user_ID of the currently logged in user
+		global $user_ID;
+
+		// Obtain User Details
+		$user = new WP_User($user_ID);
+
+		// If the User's user level is higher than what is set in the privacyPlus_user_level, 
+		// then we can show the private post.  This field is found inside the wp_options table
+		if ($user->wp_user_level >= get_option("privacyPlus_user_level")) 
+		{
+			// Add the capabilities
+			$allcaps['read_private_posts'] = $allcaps['read_private_pages'] = 1;
+			return $allcaps;
+		}
+	}
+	else 
+	{
+		// This user_has_caps call has nothing to do with reading a private post. 
+		// Allow it to proceed as normal.
+		return $allcaps;
+	}
+}
+
+/**
+ * privatePlus_where() - Function that does the work in adjusting the WHERE clause that obtains lists of posts
+ * 
+ * This function will determine if the user's level is high enough to see private posts in a list of posts.
  * If this is the cause, it then adjusts the WHERE clause to obtain both public and private posts.
  *
- * @where    string    $where    The WHERE clause used to obtain the posts that will be displaed
+ * @param    string    $where    The WHERE clause used to obtain the posts that will be displaed
  * @return   string              The adjusted WHERE clause
  */
 function privatePlus_where(&$where) 
 {
-	global $user_ID, $wpdb;
-	// global $wp_query, $user_level, $wp_roles;  -- Unused
-
 	// We only show Private Posts to Authenticated Users.
 	// Otherwise there is no purpose, it would basically be a Public Post
 	if (is_user_logged_in()) 
 	{ 
 		// Obtain User Details
+		global $user_ID;
 		$user = new WP_User($user_ID);
 
 		// If the User's user level is higher than what is set in the privacyPlus_user_level, 
