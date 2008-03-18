@@ -1,7 +1,7 @@
 <?php
 /* 
 Plugin Name:  Private Plus
-Version: .9
+Version: .91
 Plugin URI:  http://tech.brandonpetersen.com/privateplus/
 Description:  Allow the administrator to choose which groups can see private posts
 Author:  Brandon Petersen
