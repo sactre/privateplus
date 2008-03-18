@@ -220,7 +220,7 @@ be able to see private posts.</p>
  */
 function privatePlus_updateOptions() {
      $updated = false;
-     if ($_REQUEST['privacyPlus_user_level']) {
+     if (isset($_REQUEST['privacyPlus_user_level'])) {
           update_option('privacyPlus_user_level', $_REQUEST['privacyPlus_user_level']);
           $updated = true;
      }
