@@ -1,7 +1,7 @@
 === Plugin Name ===
 Contributors: brandonjpetersen
 Donate link: http://tech.brandonpetersen.com/redir/privatePlus.php
-Tags: private-post, private
+Tags: private-post, private, post, privacy
 Requires at least: 2.3
 Tested up to: 2.5
 Stable tag: 4.3
