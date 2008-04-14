@@ -1,7 +1,7 @@
 <?php
 /* 
 Plugin Name:  Private Plus
-Version: .91
+Version: .92
 Plugin URI:  http://tech.brandonpetersen.com/privateplus/
 Description:  Allow the administrator to choose which groups can see private posts
 Author:  Brandon Petersen
@@ -112,17 +112,27 @@ function privatePlus_where(&$where)
 	if (is_user_logged_in()) 
 	{ 
 		// Obtain User Details
-		global $user_ID;
+		global $user_ID, $wpdb;
 		$user = new WP_User($user_ID);
 
 		// If the User's user level is higher than what is set in the privacyPlus_user_level, 
-		// then we can show the private post.  This field is found inside the wp_options table
-		if ($user->wp_user_level >= get_option("privacyPlus_user_level")) 
+		// then we can show the private post.  This field is found inside the wp_options table.
+		// Also, if the privacyPlus_user_level is set to subscriber (0) then anyone who is logged in can view the posts
+		if ($user->wp_user_level >= get_option("privacyPlus_user_level") OR get_option("privacyPlus_user_level") == 0) 
 		{
 			/** @todo use regular expressions for this mess of IF Statements */
-
 			// Replace the post_status clause and add PRIVATE posts into the query results
-			if (strstr($where, 'post_status = "publish"')) 
+			if (strstr($where, $wpdb->prefix . 'posts.post_status = "publish"')) 
+			{
+				$where = str_replace($wpdb->prefix . 'posts.post_status = "publish"', 
+					' ( ' . $wpdb->prefix . 'posts.post_status = "private" OR ' . $wpdb->prefix . 'posts.post_status = "publish" ) ', $where);
+			}
+			elseif (strstr($where, $wpdb->prefix . "posts.post_status = 'publish'")) 
+			{
+				$where = str_replace($wpdb->prefix . "posts.post_status = 'publish'", 
+					' ( ' . $wpdb->prefix . 'posts.post_status = "private" OR ' . $wpdb->prefix . 'posts.post_status = "publish" ) ', $where);
+			}
+			elseif (strstr($where, 'post_status = "publish"')) 
 			{
 				$where = str_replace('post_status = "publish"', ' ( post_status = "private" OR post_status = "publish" ) ', $where);
 			}
