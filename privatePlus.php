@@ -105,7 +105,7 @@ function privatePlus_add_read_ability($allcaps, $caps, $args)
  * @param    string    $where    The WHERE clause used to obtain the posts that will be displaed
  * @return   string              The adjusted WHERE clause
  */
-function privatePlus_where(&$where) 
+function privatePlus_where($where) 
 {
 	// We only show Private Posts to Authenticated Users.
 	// Otherwise there is no purpose, it would basically be a Public Post
